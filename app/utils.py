@@ -1,4 +1,5 @@
 import os
+import requests
 import streamlit as st
 from openai import AzureOpenAI
 
@@ -28,12 +29,10 @@ def trace(col2, label, message):
             # print(f"{label}: {message}")
 
 
-# check app access
-def check_access(appKey):
-    if config["auth"] == "1":
-        return appKey == config["app_key"]
-    else:
-        return True
+# get request api
+def get_request(url):
+    response = requests.get(url)
+    return response.json()
 
 
 # chat completion
