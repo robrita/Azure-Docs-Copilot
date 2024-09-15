@@ -12,6 +12,7 @@ model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 # get user query
 def query():
     category, question, submit, threshold, top_n = select_options()
+    print(">>>>>question:", question)
 
     if submit:
         with st.spinner("Processing ..."):
@@ -62,7 +63,32 @@ def select_options():
             )
             top_n = st.selectbox("TopK:", [3, 4, 5, 6, 7, 8, 9, 10])
 
+        # show relevant queries
+        if submit:
+            st.markdown("**Relevant queries:**")
+            queries = relevant_queries(question)
+            st.write(queries[0])
+            st.write(queries[1])
+            st.write(queries[2])
+
     return category, question, submit, threshold, top_n
+
+
+# get relevant queries
+def relevant_queries(query):
+    system = [
+        "given a search query below, rewrite it into 3 different effective search queries with complete thought.",
+        "Return in json format under the rewrite key.\n",
+        f"query: {query}",
+        f"rewrite:",
+    ]
+
+    messages = [
+        {"role": "system", "content": "\n".join(system)},
+    ]
+    result = utils.chat(messages, 0.7, 400, True, "json_object")
+    # print(">>>>>result", result)
+    return json.loads(result)["rewrite"]
 
 
 # get query results
@@ -73,7 +99,7 @@ def search_docs(url):
 
     # throw error if no results
     if not data["results"]:
-        raise Exception("No results found")
+        raise Exception("No results found:")
 
     # st.write(data["results"])
     # loop through all the results
@@ -102,6 +128,10 @@ def vector_search(query, contents, threshold=0.5, top_n=3):
 
     # Return the top N results
     results = [(contents[i], similarities[i]) for i in sorted_indices[:top_n]]
+    # throw error if no results
+    if not results:
+        raise Exception("No results found: Try changing the threshold or topK value.")
+
     return results
 
 
