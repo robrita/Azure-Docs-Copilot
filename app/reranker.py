@@ -1,9 +1,11 @@
 from sklearn.metrics.pairwise import cosine_similarity
 import app.utils as utils
+import streamlit as st
 import numpy as np
 
 
 # vector reranking
+@st.cache_data
 def vector_rerank(query, contents, threshold=0.5, top_n=3):
     # Encode the contents and query
     query_embedding = utils.get_embeddings([query])

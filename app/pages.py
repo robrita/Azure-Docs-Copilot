@@ -18,6 +18,12 @@ def show_home():
     st.markdown(
         """
         <style>
+        .block-container {
+            padding-top: 2rem;
+            # padding-bottom: 1rem;
+            # padding-left: 1rem;
+            # padding-right: 1rem;
+        }
         .stAppDeployButton {
             display: none;
         }

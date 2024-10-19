@@ -2,14 +2,12 @@ import json
 import streamlit as st
 import app.utils as utils
 import app.reranker as reranker
-from sklearn.metrics.pairwise import cosine_similarity
-import numpy as np
 
 
 # get user query
 def query():
     category, question, submit, threshold, top_n = select_options()
-    print(">>>>>question:", question)
+    # print(">>>>>question:", question)
 
     if submit:
         with st.spinner("Processing ..."):
@@ -70,6 +68,7 @@ def select_options():
 
 
 # get relevant queries
+@st.cache_data
 def relevant_queries(query):
     system = [
         "given a search query below, rewrite it into 3 different effective search queries with complete thought.",
@@ -87,6 +86,7 @@ def relevant_queries(query):
 
 
 # get query results
+@st.cache_data
 def search_docs(url):
     data = utils.get_request(url)
     contents = []
@@ -108,6 +108,7 @@ def search_docs(url):
 
 
 # format results
+@st.cache_data
 def format_results(results):
     # loop through all the results
     for result in results:
