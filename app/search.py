@@ -1,12 +1,9 @@
 import json
 import streamlit as st
 import app.utils as utils
-from sentence_transformers import SentenceTransformer
+import app.reranker as reranker
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
-
-# Load the model
-model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
 
 # get user query
@@ -24,7 +21,7 @@ def query():
 
                 # print(">>>>>url", url)
                 contents = search_docs(url)
-                results = vector_search(question, contents, threshold, top_n)
+                results = reranker.vector_rerank(question, contents, threshold, top_n)
 
                 # print(">>>>>results", results)
                 format_results(results)
@@ -58,10 +55,8 @@ def select_options():
             submit = st.button("Search", key="submit", disabled=question == "")
 
         with col2:
-            threshold = st.selectbox(
-                "Threshold:", [0.8, 0.7, 0.6, 0.5, 0.4, 0.3], index=3
-            )
-            top_n = st.selectbox("TopK:", [3, 4, 5, 6, 7, 8, 9, 10])
+            threshold = st.selectbox("Threshold:", [0.2, 0.5, 0.8], index=1)
+            top_n = st.selectbox("TopK:", [5, 10])
 
         # show relevant queries
         if submit:
@@ -86,7 +81,7 @@ def relevant_queries(query):
     messages = [
         {"role": "system", "content": "\n".join(system)},
     ]
-    result = utils.chat(messages, 0.7, 400, True, "json_object")
+    result = utils.chat(messages, 0.7, 400, True, "json_object", "gpt-4o-mini")
     # print(">>>>>result", result)
     return json.loads(result)["rewrite"]
 
@@ -110,29 +105,6 @@ def search_docs(url):
         contents.append(json.dumps(results))
 
     return contents
-
-
-# Define a function for vector search
-def vector_search(query, contents, threshold=0.5, top_n=3):
-    # Encode the contents and query
-    embeddings = model.encode(contents)
-    query_embedding = model.encode([query])
-
-    # Compute cosine similarity between the query and each sentence
-    similarities = cosine_similarity(query_embedding, embeddings).flatten()
-
-    # Get top N results that cross the threshold
-    top_indices = np.where(similarities > threshold)[0]
-    sorted_indices = top_indices[np.argsort(similarities[top_indices])[::-1]]
-    # print(">>>>>sorted_indices", sorted_indices)
-
-    # Return the top N results
-    results = [(contents[i], similarities[i]) for i in sorted_indices[:top_n]]
-    # throw error if no results
-    if not results:
-        raise Exception("No results found: Try changing the threshold or topK value.")
-
-    return results
 
 
 # format results

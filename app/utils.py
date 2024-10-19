@@ -8,7 +8,6 @@ config = {
     "endpoint": os.environ["AZURE_OPENAI_ENDPOINT"],
     "api_key": os.environ["AZURE_OPENAI_KEY"],
     "api_version": os.environ["AZURE_OPENAI_API_VERSION"],
-    "model": os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT"],
 }
 
 # Initialize OpenAI client
@@ -40,13 +39,14 @@ def chat(
     max_tokens=800,
     streaming=False,
     format="text",
+    model="gpt-4o",
 ):
     try:
         # Response generation
         full_response = ""
 
         for completion in clientAOAI.chat.completions.create(
-            model=config["model"],
+            model=model,
             messages=messages,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -62,3 +62,13 @@ def chat(
     except Exception as e:
         st.error(f"An error occurred: {e}")
         return None
+
+
+# https://learn.microsoft.com/en-us/azure/ai-services/openai/tutorials/embeddings?tabs=python-new%2Ccommand-line&pivots=programming-language-python
+# Function to get embeddings from Azure OpenAI
+def get_embeddings(text, model="text-embedding-3-small"):
+    input = [text] if isinstance(text, str) else text
+    response = clientAOAI.embeddings.create(input=input, model=model)
+
+    embeddings = embeddings = [data.embedding for data in response.data]
+    return embeddings
